@@ -1,0 +1,11 @@
+[package]
+name = "RustKnn"
+version = "0.1.0"
+authors = ["nobody <nobody@nowhere.com>"]
+
+[dependencies]
+rand="*"
+log="*"
+csv="*"
+env_logger = "*"
+rustc-serialize="*"
