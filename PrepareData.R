@@ -1,5 +1,9 @@
 library(caret)
 
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
 # Load training samples
 trainRaw <- read.csv("train.csv")
 
@@ -16,8 +20,13 @@ train <- data.frame(
   Color = as.numeric(trainRaw$Color)
 )
 
-set.seed(12345)
-inTrain = createDataPartition(train$AnimalID, p = 2/3, list = FALSE)
+trainNorm <- as.data.frame(lapply(train, normalize))
+trainNorm$AnimalID <- train$AnimalID
+trainNorm$OutcomeType <- train$OutcomeType
+trainNorm$OutcomeSubtype <- train$OutcomeSubtype
 
-write.csv(train[inTrain, ], file = "processed_train.csv", row.names = FALSE)
-write.csv(train[-inTrain, ], file = "processed_cv.csv", row.names = FALSE)
+set.seed(12345)
+inTrain = createDataPartition(trainNorm$AnimalID, p = 2/3, list = FALSE)
+
+write.csv(trainNorm[inTrain, ], file = "processed_train.csv", row.names = FALSE)
+write.csv(trainNorm[-inTrain, ], file = "processed_cv.csv", row.names = FALSE)

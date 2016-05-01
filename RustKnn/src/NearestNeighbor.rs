@@ -5,7 +5,7 @@ pub trait Knn {
     fn distance(&self, y : &Self) -> f64;
 }
 
-pub fn nearestNeighbor<T>(instances : Vec<T>, sample : T) -> T
+pub fn nearestNeighbor<T>(instances : &[T], sample : &T) -> T
     where T : Knn + Clone {
     //instances.iter().min_by_key(|x| sample.distance(x)).unwrap()
     let mut minInstanceIdx = 0;

@@ -6,16 +6,20 @@ use std::ops::Mul;
 
 #[derive(RustcDecodable,Debug,Copy,Clone)]
 pub struct Animal {
-    AnimalID        : u32,
-    Name            : u32,
-    DateTime        : u32,
-    OutcomeType     : u32,
-    OutcomeSubtype  : u32,
-    AnimalType      : u32,
-    SexuponOutcome  : u32,
-    AgeuponOutcome  : u32,
-    Breed           : u32,
-    Color           : u32
+    AnimalID        : f64,
+    Name            : f64,
+    DateTime        : f64,
+    OutcomeType     : f64,
+    OutcomeSubtype  : f64,
+    AnimalType      : f64,
+    SexuponOutcome  : f64,
+    AgeuponOutcome  : f64,
+    Breed           : f64,
+    Color           : f64
+}
+
+pub fn compareAnimals(x: &Animal, y: &Animal) -> bool {
+    x.OutcomeType == y.OutcomeType
 }
 
 pub fn loadData(fileName : &str) -> csv::Result<Vec<Animal>> {
