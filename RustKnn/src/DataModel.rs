@@ -6,16 +6,16 @@ use std::ops::Mul;
 
 #[derive(RustcDecodable,Debug,Copy,Clone)]
 pub struct Animal {
-    AnimalID        : f64,
-    Name            : f64,
-    DateTime        : f64,
-    OutcomeType     : f64,
-    OutcomeSubtype  : f64,
-    AnimalType      : f64,
-    SexuponOutcome  : f64,
-    AgeuponOutcome  : f64,
-    Breed           : f64,
-    Color           : f64
+    pub AnimalID        : f64,
+    pub Name            : f64,
+    pub DateTime        : f64,
+    pub OutcomeType     : usize,
+    pub OutcomeSubtype  : usize,
+    pub AnimalType      : f64,
+    pub SexuponOutcome  : f64,
+    pub AgeuponOutcome  : f64,
+    pub Breed           : f64,
+    pub Color           : f64
 }
 
 pub fn compareAnimals(x: &Animal, y: &Animal) -> bool {
