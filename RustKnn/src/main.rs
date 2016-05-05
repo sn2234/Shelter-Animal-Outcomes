@@ -34,20 +34,14 @@ fn populateFromVote(instance: &DataModel::Animal, neighbors: &[DataModel::Animal
     return DataModel::Animal { OutcomeType: newOutcome, .. *instance};
 }
 
-fn testKNearestNeighbors() {
+fn testKNearestNeighbors(trainData: &[DataModel::Animal], cvData: &[DataModel::Animal]) {
     
     let k = 500;
     println!("Testing k-neighbors prediction with k: {}", k);
-    
-    let trainData = DataModel::loadData("..\\processed_train.csv").unwrap();
-    println!("Loaded training data: {} elements", trainData.len());
-    
-    let cvData = DataModel::loadData("..\\processed_cv.csv").unwrap();
-    println!("Loaded CV data: {} elements", cvData.len());
 
     let mut correctCount = 0;
     
-    for testVal in &cvData {
+    for testVal in cvData {
         let neighbors = NearestNeighbor::kNearestNeighbors(k, &trainData, testVal);
         let updated = populateFromVote(&testVal, &neighbors);
         if updated.OutcomeType == testVal.OutcomeType {
@@ -58,14 +52,8 @@ fn testKNearestNeighbors() {
     println!("Accuracy: {}", (correctCount as f64)/(cvData.len() as f64));
 }
 
-fn testSingleNeighbor() {
+fn testSingleNeighbor(trainData: &[DataModel::Animal], cvData: &[DataModel::Animal]) {
     println!("Testing single-neighbor prediction");
-    
-    let trainData = DataModel::loadData("..\\processed_train.csv").unwrap();
-    println!("Loaded training data: {} elements", trainData.len());
-    
-    let cvData = DataModel::loadData("..\\processed_cv.csv").unwrap();
-    println!("Loaded CV data: {} elements", cvData.len());
     
     let numberOfHits = cvData.iter().map(|x| {
         let nn = NearestNeighbor::nearestNeighbor(&trainData, &x);
@@ -79,12 +67,24 @@ fn testSingleNeighbor() {
     println!("Accuracy: {}", (numberOfHits as f64)/(cvData.len() as f64)); 
 }
 
+fn loadData() -> (std::vec::Vec<DataModel::Animal>, std::vec::Vec<DataModel::Animal>) {
+    let trainData = DataModel::loadData("..\\processed_train.csv").unwrap();
+    println!("Loaded training data: {} elements", trainData.len());
+    
+    let cvData = DataModel::loadData("..\\processed_cv.csv").unwrap();
+    println!("Loaded CV data: {} elements", cvData.len());
+
+    return (trainData, cvData);
+}
+
 fn main() {
     env_logger::init().unwrap();
     info!("Test log");
+    
+    let (trainData, cvData) = loadData();
 
-    testSingleNeighbor();
-    testKNearestNeighbors();
+    testSingleNeighbor(&trainData, &cvData);
+    testKNearestNeighbors(&trainData, &cvData);
 /*
     let a = DataModel::loadData("..\\processed_train.csv").unwrap();
     
