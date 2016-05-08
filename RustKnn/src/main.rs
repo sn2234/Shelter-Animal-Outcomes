@@ -5,6 +5,7 @@ extern crate env_logger;
 extern crate csv;
 extern crate rustc_serialize;
 extern crate simple_parallel;
+extern crate crossbeam;
 
 mod DataModel;
 mod NearestNeighbor;
@@ -35,19 +36,21 @@ fn populateFromVote(instance: &DataModel::Animal, neighbors: &[DataModel::Animal
 }
 
 fn testKNearestNeighbors(trainData: &[DataModel::Animal], cvData: &[DataModel::Animal]) {
-    
     let k = 500;
     println!("Testing k-neighbors prediction with k: {}", k);
 
-    let mut correctCount = 0;
+    //let correctCount = 0;
     
-    for testVal in cvData {
-        let neighbors = NearestNeighbor::kNearestNeighbors(k, &trainData, testVal);
-        let updated = populateFromVote(&testVal, &neighbors);
-        if updated.OutcomeType == testVal.OutcomeType {
-            correctCount += 1;
-        }
-    }
+    let correctCount = crossbeam::scope(|s| {
+        let it = simple_parallel::unordered_map(s, cvData, |&testVal| -> usize {
+            let neighbors = NearestNeighbor::kNearestNeighbors(k, &trainData, &testVal);
+            let updated = populateFromVote(&testVal, &neighbors);
+            
+            return if updated.OutcomeType == testVal.OutcomeType { 1 } else { 0 };
+        });
+        
+        it.fold(0, |acc, x| acc + x.1)
+    });
     
     println!("Accuracy: {}", (correctCount as f64)/(cvData.len() as f64));
 }
