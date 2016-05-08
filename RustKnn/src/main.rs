@@ -35,6 +35,41 @@ fn populateFromVote(instance: &DataModel::Animal, neighbors: &[DataModel::Animal
     return DataModel::Animal { OutcomeType: newOutcome, .. *instance};
 }
 
+fn getAccuracy(trainData: &[DataModel::Animal], cvData: &[DataModel::Animal], k: usize) -> f64 {
+   let correctCount = crossbeam::scope(|s| {
+        let it = simple_parallel::unordered_map(s, cvData, |&testVal| -> usize {
+            let neighbors = NearestNeighbor::kNearestNeighbors(k, &trainData, &testVal);
+            let updated = populateFromVote(&testVal, &neighbors);
+            
+            return if updated.OutcomeType == testVal.OutcomeType { 1 } else { 0 };
+        });
+        
+        it.fold(0, |acc, x| acc + x.1)
+    });
+    
+    let accuracy = (correctCount as f64)/(cvData.len() as f64);
+    println!("K: {}; acc: {}", k, accuracy);
+    return accuracy;
+}
+
+fn findBestK(trainData: &[DataModel::Animal], cvData: &[DataModel::Animal], kRange: &[usize]) -> (usize, f64) {
+    let accMap: Vec<f64> = kRange.iter().map(|x| getAccuracy(trainData, cvData, *x)).collect();
+    
+    let mut idxMax = 0;
+    let mut accMax = 0.0;
+    
+    for i in 0..accMap.len() {
+        if accMap[i] > accMax {
+            accMax = accMap[i];
+            idxMax = i;
+        } 
+    }
+    
+    println!("Best k: {} with accuracy: {}", kRange[idxMax], accMax);
+    
+    return (kRange[idxMax], accMax);
+}
+
 fn testKNearestNeighbors(trainData: &[DataModel::Animal], cvData: &[DataModel::Animal]) {
     let k = 500;
     println!("Testing k-neighbors prediction with k: {}", k);
@@ -87,7 +122,8 @@ fn main() {
     let (trainData, cvData) = loadData();
 
     testSingleNeighbor(&trainData, &cvData);
-    testKNearestNeighbors(&trainData, &cvData);
+    //testKNearestNeighbors(&trainData, &cvData);
+    findBestK(&trainData, &cvData, (1..50).map(|x| 5*x).collect::<Vec<usize>>().as_slice());
 /*
     let a = DataModel::loadData("..\\processed_train.csv").unwrap();
     
