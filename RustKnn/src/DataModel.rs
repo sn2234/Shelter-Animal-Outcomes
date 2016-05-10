@@ -73,6 +73,6 @@ fn minkowskyDistance(from: &Animal, to: &Animal) -> f64 {
 
 impl Knn for Animal {
     fn distance(&self, y : &Self) -> f64 {
-        minkowskyDistance(self, y)
+        manhattanDistance(self, y)
     }
 }

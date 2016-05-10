@@ -4,13 +4,13 @@ extern crate log;
 extern crate env_logger;
 extern crate csv;
 extern crate rustc_serialize;
-extern crate simple_parallel;
-extern crate crossbeam;
+extern crate rayon;
 
 mod DataModel;
 mod NearestNeighbor;
 
 use std::collections::BTreeMap;
+use rayon::prelude::*;
 
 //set RUST_LOG=RustKnn=debug
 
@@ -36,23 +36,23 @@ fn populateFromVote(instance: &DataModel::Animal, neighbors: &[DataModel::Animal
 }
 
 fn getAccuracy(trainData: &[DataModel::Animal], cvData: &[DataModel::Animal], k: usize) -> f64 {
-   let correctCount = crossbeam::scope(|s| {
-        let it = simple_parallel::unordered_map(s, cvData, |&testVal| -> usize {
-            let neighbors = NearestNeighbor::kNearestNeighbors(k, &trainData, &testVal);
-            let updated = populateFromVote(&testVal, &neighbors);
-            
-            return if updated.OutcomeType == testVal.OutcomeType { 1 } else { 0 };
-        });
-        
-        it.fold(0, |acc, x| acc + x.1)
-    });
-    
+   
+   let correctCount = cvData.into_par_iter()
+            .map(|&testVal| -> usize {
+                    let neighbors = NearestNeighbor::kNearestNeighbors(k, &trainData, &testVal);
+                    let updated = populateFromVote(&testVal, &neighbors);
+                    
+                    return if updated.OutcomeType == testVal.OutcomeType { 1 } else { 0 };
+                })
+            .reduce(rayon::par_iter::reduce::SUM);
+
     let accuracy = (correctCount as f64)/(cvData.len() as f64);
     println!("K: {}; acc: {}", k, accuracy);
     return accuracy;
 }
 
-fn findBestK(trainData: &[DataModel::Animal], cvData: &[DataModel::Animal], kRange: &[usize]) -> (usize, f64) {
+fn findBestK(trainData: &[DataModel::Animal], cvData: &[DataModel::Animal], kRange: &[usize]) -> (usize, f64)
+{
     let accMap: Vec<f64> = kRange.iter().map(|x| getAccuracy(trainData, cvData, *x)).collect();
     
     let mut idxMax = 0;
@@ -70,6 +70,7 @@ fn findBestK(trainData: &[DataModel::Animal], cvData: &[DataModel::Animal], kRan
     return (kRange[idxMax], accMax);
 }
 
+/*
 fn testKNearestNeighbors(trainData: &[DataModel::Animal], cvData: &[DataModel::Animal]) {
     let k = 500;
     println!("Testing k-neighbors prediction with k: {}", k);
@@ -89,6 +90,7 @@ fn testKNearestNeighbors(trainData: &[DataModel::Animal], cvData: &[DataModel::A
     
     println!("Accuracy: {}", (correctCount as f64)/(cvData.len() as f64));
 }
+*/
 
 fn testSingleNeighbor(trainData: &[DataModel::Animal], cvData: &[DataModel::Animal]) {
     println!("Testing single-neighbor prediction");
@@ -118,6 +120,8 @@ fn loadData() -> (std::vec::Vec<DataModel::Animal>, std::vec::Vec<DataModel::Ani
 fn main() {
     env_logger::init().unwrap();
     info!("Test log");
+    
+    rayon::initialize(rayon::Configuration::new().set_num_threads(4)).unwrap();
     
     let (trainData, cvData) = loadData();
 
