@@ -4,3 +4,5 @@
 .Ruserdata
 /RustKnn/target
 /RustKnn/undefined
+/AnimalsPython/__pycache__
+/AnimalsPython/.vs/AnimalsPython/v14
