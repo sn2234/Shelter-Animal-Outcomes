@@ -32,20 +32,30 @@ class DataLoader:
     def loadTrainData(self, fileName):
         rawData = pd.read_csv(fileName)
 
+        #['Name', 'DateTime', 'OutcomeType',
+        #   'AnimalType', 'SexuponOutcome', 'AgeuponOutcome', 'Breed', 'Color']
+
+        features = ['Name', 'DateTime',
+           'AnimalType', 'SexuponOutcome', 'AgeuponOutcome', 'Breed', 'Color']
+
+        featuresFull = ['Name', 'DateTime', 'OutcomeType',
+           'AnimalType', 'SexuponOutcome', 'AgeuponOutcome', 'Breed', 'Color']
+
         # Select columns
-        selectedColumns = rawData[['Name', 'DateTime', 'OutcomeType',
-           'AnimalType', 'SexuponOutcome', 'AgeuponOutcome', 'Breed', 'Color']]
+        selectedColumns = rawData[featuresFull]
 
-        # Parse dates
-        selectedColumns['DateTime'] = pd.to_datetime(selectedColumns['DateTime'])
-        #And convert timestamps to floats
-        selectedColumns['DateTime'] = selectedColumns['DateTime'].map(lambda x: x.timestamp())
+        if features.count('DateTime') > 0:
+            # Parse dates
+            selectedColumns['DateTime'] = pd.to_datetime(selectedColumns['DateTime'])
+            #And convert timestamps to floats
+            selectedColumns['DateTime'] = selectedColumns['DateTime'].map(lambda x: x.timestamp())
 
-        # Parse age and fill missing entries with mean value
-        selectedColumns.loc[:, ('AgeuponOutcome')] = selectedColumns['AgeuponOutcome'].map(parseAge)
+        if features.count('AgeuponOutcome') > 0:
+            # Parse age and fill missing entries with mean value
+            selectedColumns.loc[:, ('AgeuponOutcome')] = selectedColumns['AgeuponOutcome'].map(parseAge)
 
-        imp = preprocessing.Imputer()
-        selectedColumns.loc[:, ('AgeuponOutcome')] = imp.fit_transform(selectedColumns['AgeuponOutcome'].reshape(-1, 1))
+            imp = preprocessing.Imputer()
+            selectedColumns.loc[:, ('AgeuponOutcome')] = imp.fit_transform(selectedColumns['AgeuponOutcome'].reshape(-1, 1))
 
 
         # Fill other missing values - hack
@@ -57,11 +67,11 @@ class DataLoader:
                 enc = preprocessing.LabelEncoder()
                 if col != 'OutcomeType':
                     selectedColumns[col] =  enc.fit_transform(selectedColumns[col]).astype(float)
+                else:
+                    selectedColumns[col] =  enc.fit_transform(selectedColumns[col]).astype(int)
                 self.colEncoders[col] = enc
 
-        preprocessing.scale(selectedColumns[['Name', 'DateTime', 'AnimalType', 'SexuponOutcome',
-                                'AgeuponOutcome', 'Breed', 'Color']], copy =  False)
+        preprocessing.scale(selectedColumns[features], copy =  False)
 
-        return (selectedColumns[['Name', 'DateTime', 'AnimalType', 'SexuponOutcome',
-                                'AgeuponOutcome', 'Breed', 'Color']].values,
+        return (selectedColumns[features].values,
                 selectedColumns['OutcomeType'].values)

@@ -32,11 +32,3 @@ x, y = dl.loadTrainData("..\\train.csv")
 (k, acc) = findBestNeighborsCount(x_train, x_cv, y_train, y_cv, 50, 200, 50)
 
 print("Best k: {} with accuracy: {}".format(k, acc))
-
-#knn = neighbors.KNeighborsClassifier(n_neighbors=3)
-
-#knn.fit(x_train, y_train)
-
-#acc_cv = accuracy_score(y_cv, knn.predict(x_cv))
-
-#print("Accuracy on CV dataset: {}".format(acc_cv))
